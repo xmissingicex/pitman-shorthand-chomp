@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
@@ -27,7 +28,7 @@ const MAZE = [
   [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,2,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,2,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
   [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
   [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,0,1,1,1,1,1],
   [1,1,1,1,1,0,1,3,3,3,3,3,3,3,3,3,3,3,1,0,1,1,1,1,1],
@@ -36,7 +37,7 @@ const MAZE = [
   [1,1,1,1,1,0,1,3,1,3,3,3,3,3,3,3,1,3,1,0,1,1,1,1,1],
   [1,1,1,1,1,0,1,3,1,1,1,1,1,1,1,1,1,3,1,0,1,1,1,1,1],
   [1,1,1,1,1,0,1,3,3,3,3,3,3,3,3,3,3,3,1,0,1,1,1,1,1],
-  [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,1,1,0,1],
+  [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,0,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,0,1],
   [1,2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,1],
@@ -71,338 +72,69 @@ export const PitmanPacManGame = () => {
   const drawSirIsaacPitman = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, direction: string = 'right') => {
     const centerX = x * CELL_SIZE + CELL_SIZE / 2;
     const centerY = y * CELL_SIZE + CELL_SIZE / 2;
-    const size = CELL_SIZE * 2.5; // MASSIVE size for hyper-realistic detail
+    const radius = CELL_SIZE * 0.4;
 
-    // Save context for complex rendering
-    ctx.save();
-
-    // Create highly detailed skin gradient matching the reference
-    const skinGradient = ctx.createRadialGradient(
-      centerX - size * 0.15, centerY - size * 0.2, 0,
-      centerX, centerY, size * 0.8
-    );
-    skinGradient.addColorStop(0, '#fce4d6'); // Highlight
-    skinGradient.addColorStop(0.3, '#f5d5c4'); // Mid-tone
-    skinGradient.addColorStop(0.7, '#e8c1a8'); // Shadow
-    skinGradient.addColorStop(1, '#d4a78a'); // Deep shadow
-
-    // Main face shape - oval for realism
-    ctx.fillStyle = skinGradient;
+    // Face (circle)
+    ctx.fillStyle = '#fdbcb4'; // Skin tone
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY, size * 0.8, size * 0.9, 0, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Forehead with realistic aging lines
-    ctx.strokeStyle = 'rgba(212, 167, 138, 0.4)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath();
-      ctx.moveTo(centerX - size * 0.5, centerY - size * (0.7 + i * 0.08));
-      ctx.quadraticCurveTo(centerX, centerY - size * (0.75 + i * 0.08), centerX + size * 0.5, centerY - size * (0.7 + i * 0.08));
-      ctx.stroke();
-    }
-
-    // Hyper-realistic wire-rim glasses exactly like the reference
-    ctx.strokeStyle = '#8B4513'; // Brown/gold frame
-    ctx.lineWidth = 2;
-    
-    const lensRadius = size * 0.18;
-    const lensY = centerY - size * 0.25;
+    // Glasses
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    const glassRadius = radius * 0.25;
     
     // Left lens
     ctx.beginPath();
-    ctx.arc(centerX - size * 0.28, lensY, lensRadius, 0, Math.PI * 2);
+    ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, glassRadius, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Right lens  
+    // Right lens
     ctx.beginPath();
-    ctx.arc(centerX + size * 0.28, lensY, lensRadius, 0, Math.PI * 2);
+    ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, glassRadius, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Nose bridge
+    // Bridge
     ctx.beginPath();
-    ctx.moveTo(centerX - size * 0.1, lensY);
-    ctx.lineTo(centerX + size * 0.1, lensY);
-    ctx.stroke();
-    
-    // Realistic temple arms
-    ctx.beginPath();
-    ctx.moveTo(centerX - size * 0.46, lensY);
-    ctx.quadraticCurveTo(centerX - size * 0.7, lensY - size * 0.1, centerX - size * 0.8, centerY);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX + size * 0.46, lensY);
-    ctx.quadraticCurveTo(centerX + size * 0.7, lensY - size * 0.1, centerX + size * 0.8, centerY);
+    ctx.moveTo(centerX - radius * 0.05, centerY - radius * 0.2);
+    ctx.lineTo(centerX + radius * 0.05, centerY - radius * 0.2);
     ctx.stroke();
 
-    // Lens reflections for ultra-realism
-    const leftLensGradient = ctx.createLinearGradient(
-      centerX - size * 0.4, lensY - size * 0.15,
-      centerX - size * 0.16, lensY + size * 0.05
-    );
-    leftLensGradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
-    leftLensGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
-    ctx.fillStyle = leftLensGradient;
+    // White hair on sides
+    ctx.fillStyle = '#f0f0f0';
     ctx.beginPath();
-    ctx.arc(centerX - size * 0.28, lensY, lensRadius * 0.8, 0, Math.PI * 2);
+    ctx.arc(centerX - radius * 0.7, centerY - radius * 0.3, radius * 0.2, 0, Math.PI * 2);
     ctx.fill();
     
-    const rightLensGradient = ctx.createLinearGradient(
-      centerX + size * 0.16, lensY - size * 0.15,
-      centerX + size * 0.4, lensY + size * 0.05
-    );
-    rightLensGradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
-    rightLensGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
-    ctx.fillStyle = rightLensGradient;
     ctx.beginPath();
-    ctx.arc(centerX + size * 0.28, lensY, lensRadius * 0.8, 0, Math.PI * 2);
+    ctx.arc(centerX + radius * 0.7, centerY - radius * 0.3, radius * 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Hyper-realistic eyes behind glasses
-    const eyeSize = size * 0.06;
-    
-    // Left eye complex structure
-    const leftEyeX = centerX - size * 0.28;
-    const leftEyeY = lensY;
-    
-    // Eye socket shadow
-    const socketGradient = ctx.createRadialGradient(leftEyeX, leftEyeY, 0, leftEyeX, leftEyeY, eyeSize * 2);
-    socketGradient.addColorStop(0, 'rgba(212, 167, 138, 0.1)');
-    socketGradient.addColorStop(1, 'rgba(180, 140, 120, 0.3)');
-    ctx.fillStyle = socketGradient;
+    // Big white beard
+    ctx.fillStyle = '#f5f5f5';
     ctx.beginPath();
-    ctx.ellipse(leftEyeX, leftEyeY, eyeSize * 1.5, eyeSize * 1.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Eye white
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(leftEyeX, leftEyeY, eyeSize, eyeSize * 0.8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Iris - hazel/brown like in reference
-    const irisGradient = ctx.createRadialGradient(leftEyeX, leftEyeY, 0, leftEyeX, leftEyeY, eyeSize * 0.7);
-    irisGradient.addColorStop(0, '#8B7355');
-    irisGradient.addColorStop(0.4, '#654321');
-    irisGradient.addColorStop(0.8, '#3E2723');
-    irisGradient.addColorStop(1, '#2E1B13');
-    ctx.fillStyle = irisGradient;
-    ctx.beginPath();
-    ctx.arc(leftEyeX, leftEyeY, eyeSize * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Pupil
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(leftEyeX, leftEyeY, eyeSize * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Eye highlight
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(leftEyeX - eyeSize * 0.2, leftEyeY - eyeSize * 0.2, eyeSize * 0.15, 0, Math.PI * 2);
+    ctx.ellipse(centerX, centerY + radius * 0.5, radius * 0.8, radius * 0.6, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Right eye (mirror left eye)
-    const rightEyeX = centerX + size * 0.28;
-    const rightEyeY = lensY;
-    
-    // Eye socket shadow
-    ctx.fillStyle = socketGradient;
+    // Eyes
+    ctx.fillStyle = '#333';
     ctx.beginPath();
-    ctx.ellipse(rightEyeX, rightEyeY, eyeSize * 1.5, eyeSize * 1.2, 0, 0, Math.PI * 2);
+    ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, 2, 0, Math.PI * 2);
     ctx.fill();
     
-    // Eye white
-    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.ellipse(rightEyeX, rightEyeY, eyeSize, eyeSize * 0.8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Iris
-    ctx.fillStyle = irisGradient;
-    ctx.beginPath();
-    ctx.arc(rightEyeX, rightEyeY, eyeSize * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Pupil
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(rightEyeX, rightEyeY, eyeSize * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Eye highlight
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(rightEyeX + eyeSize * 0.2, rightEyeY - eyeSize * 0.2, eyeSize * 0.15, 0, Math.PI * 2);
+    ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ultra-realistic white hair matching reference images
-    const hairGradient = ctx.createRadialGradient(
-      centerX, centerY - size * 0.6, 0,
-      centerX, centerY - size * 0.6, size * 0.8
-    );
-    hairGradient.addColorStop(0, '#ffffff');
-    hairGradient.addColorStop(0.4, '#f8f8f8');
-    hairGradient.addColorStop(0.7, '#f0f0f0');
-    hairGradient.addColorStop(1, '#e8e8e8');
-    
-    // Side hair clusters - wispy and realistic
-    ctx.fillStyle = hairGradient;
-    for (let i = 0; i < 8; i++) {
-      const hairX = centerX - size * (0.5 + i * 0.08);
-      const hairY = centerY - size * (0.4 + i * 0.03);
-      const hairSize = size * (0.12 + i * 0.01);
-      ctx.beginPath();
-      ctx.ellipse(hairX, hairY, hairSize, hairSize * 1.5, Math.PI * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Right side hair (mirrored)
-    for (let i = 0; i < 8; i++) {
-      const hairX = centerX + size * (0.5 + i * 0.08);
-      const hairY = centerY - size * (0.4 + i * 0.03);
-      const hairSize = size * (0.12 + i * 0.01);
-      ctx.beginPath();
-      ctx.ellipse(hairX, hairY, hairSize, hairSize * 1.5, -Math.PI * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // MASSIVE realistic white beard exactly like reference
-    const beardGradient = ctx.createRadialGradient(
-      centerX, centerY + size * 0.3, 0,
-      centerX, centerY + size * 0.8, size * 1.4
-    );
-    beardGradient.addColorStop(0, '#ffffff');
-    beardGradient.addColorStop(0.2, '#f8f8f8');
-    beardGradient.addColorStop(0.5, '#f0f0f0');
-    beardGradient.addColorStop(0.8, '#e8e8e8');
-    beardGradient.addColorStop(1, '#dcdcdc');
-    
-    // Main beard shape - full and voluminous
-    ctx.fillStyle = beardGradient;
-    ctx.beginPath();
-    ctx.ellipse(centerX, centerY + size * 0.6, size * 1.2, size * 1.1, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Beard texture layers for ultra-realism
-    for (let layer = 0; layer < 12; layer++) {
-      const layerAlpha = 0.4 - layer * 0.02;
-      const layerSize = 1.1 - layer * 0.06;
-      ctx.fillStyle = `rgba(248, 248, 248, ${layerAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(
-        centerX + (layer % 3 === 0 ? -size * 0.05 : layer % 3 === 1 ? size * 0.05 : 0), 
-        centerY + size * (0.6 + layer * 0.015), 
-        size * layerSize, 
-        size * (layerSize - 0.05), 
-        0, 0, Math.PI * 2
-      );
-      ctx.fill();
-    }
-
-    // Individual beard hair strands for photo-realism
-    ctx.strokeStyle = 'rgba(240, 240, 240, 0.6)';
-    ctx.lineWidth = 0.8;
-    for (let i = 0; i < 50; i++) {
-      const angle = (Math.PI * 2 * i) / 50;
-      const startRadius = size * 0.3;
-      const endRadius = size * 1.3;
-      const startX = centerX + Math.cos(angle) * startRadius;
-      const startY = centerY + size * 0.2 + Math.sin(angle) * startRadius * 0.4;
-      const endX = centerX + Math.cos(angle) * endRadius;
-      const endY = centerY + size * 0.2 + Math.sin(angle) * endRadius * 0.9;
-      
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.quadraticCurveTo(
-        centerX + Math.cos(angle) * ((startRadius + endRadius) / 2) + (Math.random() - 0.5) * size * 0.1,
-        centerY + size * 0.4 + (Math.random() - 0.5) * size * 0.05,
-        endX, endY
-      );
-      ctx.stroke();
-    }
-
-    // Realistic nose with proper shading
-    const noseGradient = ctx.createLinearGradient(
-      centerX - size * 0.04, centerY - size * 0.05,
-      centerX + size * 0.04, centerY + size * 0.08
-    );
-    noseGradient.addColorStop(0, '#f5d5c4');
-    noseGradient.addColorStop(0.5, '#e8c1a8');
-    noseGradient.addColorStop(1, '#d4a78a');
-    ctx.fillStyle = noseGradient;
-    ctx.beginPath();
-    ctx.ellipse(centerX, centerY - size * 0.02, size * 0.05, size * 0.08, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Nostril details
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.beginPath();
-    ctx.ellipse(centerX - size * 0.015, centerY + size * 0.01, size * 0.008, size * 0.012, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(centerX + size * 0.015, centerY + size * 0.01, size * 0.008, size * 0.012, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Mouth opening for Pac-Man eating action
-    const mouthSize = size * 0.3;
+    // Mouth opening based on direction
     if (direction === 'right') {
-      ctx.fillStyle = '#2c2c2c';
+      ctx.fillStyle = '#333';
       ctx.beginPath();
-      ctx.arc(centerX + size * 0.2, centerY + size * 0.15, mouthSize, -0.3, 0.3);
-      ctx.lineTo(centerX + size * 0.2, centerY + size * 0.15);
-      ctx.fill();
-    } else if (direction === 'left') {
-      ctx.fillStyle = '#2c2c2c';
-      ctx.beginPath();
-      ctx.arc(centerX - size * 0.2, centerY + size * 0.15, mouthSize, Math.PI - 0.3, Math.PI + 0.3);
-      ctx.lineTo(centerX - size * 0.2, centerY + size * 0.15);
-      ctx.fill();
-    } else if (direction === 'up') {
-      ctx.fillStyle = '#2c2c2c';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY - size * 0.05, mouthSize * 0.7, Math.PI * 1.3, Math.PI * 1.7);
-      ctx.lineTo(centerX, centerY - size * 0.05);
-      ctx.fill();
-    } else if (direction === 'down') {
-      ctx.fillStyle = '#2c2c2c';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY + size * 0.25, mouthSize * 0.7, Math.PI * 0.3, Math.PI * 0.7);
-      ctx.lineTo(centerX, centerY + size * 0.25);
+      ctx.arc(centerX, centerY, radius, -0.2, 0.2);
+      ctx.lineTo(centerX, centerY);
       ctx.fill();
     }
-
-    // Age lines and facial contours for ultra-realism
-    ctx.strokeStyle = 'rgba(212, 167, 138, 0.3)';
-    ctx.lineWidth = 0.8;
-    
-    // Nasolabial folds
-    ctx.beginPath();
-    ctx.moveTo(centerX - size * 0.02, centerY + size * 0.05);
-    ctx.quadraticCurveTo(centerX - size * 0.15, centerY + size * 0.2, centerX - size * 0.25, centerY + size * 0.3);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX + size * 0.02, centerY + size * 0.05);
-    ctx.quadraticCurveTo(centerX + size * 0.15, centerY + size * 0.2, centerX + size * 0.25, centerY + size * 0.3);
-    ctx.stroke();
-    
-    // Crow's feet
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(centerX - size * (0.46 + i * 0.03), lensY - size * (0.05 + i * 0.02));
-      ctx.lineTo(centerX - size * (0.52 + i * 0.03), lensY - size * (0.08 + i * 0.02));
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.moveTo(centerX + size * (0.46 + i * 0.03), lensY - size * (0.05 + i * 0.02));
-      ctx.lineTo(centerX + size * (0.52 + i * 0.03), lensY - size * (0.08 + i * 0.02));
-      ctx.stroke();
-    }
-
-    ctx.restore();
   }, []);
 
   const drawShorthandCharacter = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
