@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
@@ -28,7 +27,7 @@ const MAZE = [
   [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,2,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,2,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
   [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
   [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,0,1,1,1,1,1],
   [1,1,1,1,1,0,1,3,3,3,3,3,3,3,3,3,3,3,1,0,1,1,1,1,1],
@@ -72,67 +71,147 @@ export const PitmanPacManGame = () => {
   const drawSirIsaacPitman = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, direction: string = 'right') => {
     const centerX = x * CELL_SIZE + CELL_SIZE / 2;
     const centerY = y * CELL_SIZE + CELL_SIZE / 2;
-    const radius = CELL_SIZE * 0.4;
+    const radius = CELL_SIZE * 0.8; // Increased from 0.4 to 0.8 (100% increase)
 
-    // Face (circle)
+    // Face (circle) - main head
     ctx.fillStyle = '#fdbcb4'; // Skin tone
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Glasses
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1.5;
+    // Add subtle face shading for realism
+    ctx.fillStyle = '#f0a89a';
+    ctx.beginPath();
+    ctx.arc(centerX + radius * 0.2, centerY + radius * 0.1, radius * 0.6, 0, Math.PI * 2);
+    ctx.globalAlpha = 0.3;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Glasses frame - larger and more detailed
+    ctx.strokeStyle = '#2c2c2c';
+    ctx.lineWidth = 3;
     const glassRadius = radius * 0.25;
     
     // Left lens
     ctx.beginPath();
-    ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, glassRadius, 0, Math.PI * 2);
+    ctx.arc(centerX - radius * 0.35, centerY - radius * 0.25, glassRadius, 0, Math.PI * 2);
     ctx.stroke();
     
     // Right lens
     ctx.beginPath();
-    ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, glassRadius, 0, Math.PI * 2);
+    ctx.arc(centerX + radius * 0.35, centerY - radius * 0.25, glassRadius, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Bridge
+    // Bridge of glasses
     ctx.beginPath();
-    ctx.moveTo(centerX - radius * 0.05, centerY - radius * 0.2);
-    ctx.lineTo(centerX + radius * 0.05, centerY - radius * 0.2);
+    ctx.moveTo(centerX - radius * 0.1, centerY - radius * 0.25);
+    ctx.lineTo(centerX + radius * 0.1, centerY - radius * 0.25);
     ctx.stroke();
 
-    // White hair on sides
-    ctx.fillStyle = '#f0f0f0';
+    // Glasses arms
     ctx.beginPath();
-    ctx.arc(centerX - radius * 0.7, centerY - radius * 0.3, radius * 0.2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(centerX - radius * 0.6, centerY - radius * 0.25);
+    ctx.lineTo(centerX - radius * 0.8, centerY - radius * 0.1);
+    ctx.stroke();
     
     ctx.beginPath();
-    ctx.arc(centerX + radius * 0.7, centerY - radius * 0.3, radius * 0.2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(centerX + radius * 0.6, centerY - radius * 0.25);
+    ctx.lineTo(centerX + radius * 0.8, centerY - radius * 0.1);
+    ctx.stroke();
 
-    // Big white beard
+    // White hair on sides - more detailed
     ctx.fillStyle = '#f5f5f5';
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY + radius * 0.5, radius * 0.8, radius * 0.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, 2, 0, Math.PI * 2);
+    ctx.arc(centerX - radius * 0.75, centerY - radius * 0.4, radius * 0.25, 0, Math.PI * 2);
     ctx.fill();
     
     ctx.beginPath();
-    ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, 2, 0, Math.PI * 2);
+    ctx.arc(centerX + radius * 0.75, centerY - radius * 0.4, radius * 0.25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Mouth opening based on direction
+    // Additional hair tufts for realism
+    ctx.beginPath();
+    ctx.arc(centerX - radius * 0.6, centerY - radius * 0.6, radius * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(centerX + radius * 0.6, centerY - radius * 0.6, radius * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Big white beard - much more detailed and realistic
+    ctx.fillStyle = '#f8f8f8';
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY + radius * 0.6, radius * 0.9, radius * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beard texture and layers
+    ctx.fillStyle = '#f0f0f0';
+    ctx.beginPath();
+    ctx.ellipse(centerX - radius * 0.2, centerY + radius * 0.7, radius * 0.3, radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.ellipse(centerX + radius * 0.2, centerY + radius * 0.7, radius * 0.3, radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beard highlights for depth
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY + radius * 0.5, radius * 0.6, radius * 0.3, 0, 0, Math.PI * 2);
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Eyes - larger and more detailed
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(centerX - radius * 0.35, centerY - radius * 0.25, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(centerX + radius * 0.35, centerY - radius * 0.25, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye highlights for life
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(centerX - radius * 0.33, centerY - radius * 0.27, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(centerX + radius * 0.37, centerY - radius * 0.27, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nose - more defined
+    ctx.fillStyle = '#f0a89a';
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY - radius * 0.05, radius * 0.08, radius * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth opening based on direction - larger for eating
     if (direction === 'right') {
-      ctx.fillStyle = '#333';
+      ctx.fillStyle = '#2c2c2c';
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, -0.2, 0.2);
-      ctx.lineTo(centerX, centerY);
+      ctx.arc(centerX + radius * 0.2, centerY + radius * 0.1, radius * 0.3, -0.3, 0.3);
+      ctx.lineTo(centerX + radius * 0.2, centerY + radius * 0.1);
+      ctx.fill();
+    } else if (direction === 'left') {
+      ctx.fillStyle = '#2c2c2c';
+      ctx.beginPath();
+      ctx.arc(centerX - radius * 0.2, centerY + radius * 0.1, radius * 0.3, Math.PI - 0.3, Math.PI + 0.3);
+      ctx.lineTo(centerX - radius * 0.2, centerY + radius * 0.1);
+      ctx.fill();
+    } else if (direction === 'up') {
+      ctx.fillStyle = '#2c2c2c';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY - radius * 0.1, radius * 0.25, Math.PI * 1.2, Math.PI * 1.8);
+      ctx.lineTo(centerX, centerY - radius * 0.1);
+      ctx.fill();
+    } else if (direction === 'down') {
+      ctx.fillStyle = '#2c2c2c';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY + radius * 0.2, radius * 0.25, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.lineTo(centerX, centerY + radius * 0.2);
       ctx.fill();
     }
   }, []);
