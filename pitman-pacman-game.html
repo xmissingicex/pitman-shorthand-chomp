@@ -1,0 +1,733 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitman Training Quest</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0d3b5d 0%, #1a4d6b 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .game-header {
+            margin-bottom: 2rem;
+        }
+
+        .game-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-subtitle {
+            font-size: 1.25rem;
+            color: #bfdbfe;
+            margin-bottom: 1rem;
+        }
+
+        .game-instructions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: #bfdbfe;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-score { color: #a9ca48; }
+        .stat-lives { color: #ea7024; }
+        .stat-level { color: #93c5fd; }
+
+        .game-canvas-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .game-canvas {
+            border: 2px solid #0d3b5d;
+            border-radius: 0.5rem;
+            background: black;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .game-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 0.5rem;
+        }
+
+        .overlay-content {
+            text-align: center;
+            color: white;
+        }
+
+        .overlay-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .overlay-text {
+            margin-bottom: 1rem;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #a9ca48;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #8db83a;
+        }
+
+        .btn-secondary {
+            background: #ea7024;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #d4601e;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #0d3b5d;
+        }
+
+        .game-help {
+            text-align: center;
+            color: #bfdbfe;
+            font-size: 0.875rem;
+            max-width: 50rem;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                gap: 1rem;
+                font-size: 1rem;
+            }
+            
+            .game-instructions {
+                font-size: 0.75rem;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-header">
+            <h1 class="game-title">Pitman Training Quest</h1>
+            <p class="game-subtitle">Help Sir Isaac Pitman collect shorthand skills for your dream career!</p>
+            <div class="game-instructions">
+                <span>🎯 Collect shorthand characters</span>
+                <span>📜 Grab certificates for bonus points</span>
+                <span>⚡ Avoid the competition!</span>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div>Score: <span class="stat-score" id="score">0</span></div>
+            <div>Lives: <span class="stat-lives" id="lives">❤️❤️❤️</span></div>
+            <div>Level: <span class="stat-level" id="level">1</span></div>
+        </div>
+
+        <div class="game-canvas-container">
+            <canvas id="gameCanvas" class="game-canvas" width="500" height="420"></canvas>
+            
+            <div id="waitingOverlay" class="game-overlay">
+                <div class="overlay-content">
+                    <h3 class="overlay-title">Ready to Start Your Training?</h3>
+                    <p class="overlay-text">Use arrow keys to move Sir Isaac Pitman</p>
+                    <button class="btn btn-primary" onclick="startGame()">▶ Start Quest</button>
+                </div>
+            </div>
+
+            <div id="pausedOverlay" class="game-overlay hidden">
+                <div class="overlay-content">
+                    <h3 class="overlay-title">Training Paused</h3>
+                    <button class="btn btn-secondary" onclick="resumeGame()">▶ Resume</button>
+                </div>
+            </div>
+
+            <div id="gameOverOverlay" class="game-overlay hidden">
+                <div class="overlay-content">
+                    <h3 class="overlay-title">Training Complete!</h3>
+                    <p class="overlay-text">Final Score: <span id="finalScore">0</span></p>
+                    <p class="overlay-text">Ready for your next career challenge?</p>
+                    <button class="btn btn-primary" onclick="resetGame()">🔄 Start New Quest</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button id="pauseBtn" class="btn btn-secondary hidden" onclick="pauseGame()">⏸ Pause</button>
+            <button id="resumeBtn" class="btn btn-primary hidden" onclick="resumeGame()">▶ Resume</button>
+            <button class="btn btn-outline" onclick="resetGame()">🔄 Reset</button>
+        </div>
+
+        <div class="game-help">
+            <p><strong>How to Play:</strong> Help Sir Isaac Pitman collect shorthand characters to build your skills! 
+            Grab certificates for bonus points and training boosts. Avoid the competition (ghosts) - unless you have a training boost active!</p>
+            <br>
+            <p>Use arrow keys to move around the training ground. Complete levels to unlock advanced training!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game constants
+        const CELL_SIZE = 20;
+        const ROWS = 21;
+        const COLS = 25;
+
+        // Game state
+        let gameState = 'waiting';
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let player = { x: 12, y: 15 };
+        let powerMode = false;
+        let powerModeTime = 0;
+        let gameLoop = null;
+        let keysPressed = new Set();
+
+        // Maze layout
+        const MAZE_TEMPLATE = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,2,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,2,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,0,1,1,1,1,1],
+            [1,1,1,1,1,0,1,3,3,3,3,3,3,3,3,3,3,3,1,0,1,1,1,1,1],
+            [1,1,1,1,1,0,1,3,1,1,3,3,3,3,3,1,1,3,1,0,1,1,1,1,1],
+            [0,0,0,0,0,0,3,3,1,3,3,3,3,3,3,3,1,3,3,0,0,0,0,0,0],
+            [1,1,1,1,1,0,1,3,1,3,3,3,3,3,3,3,1,3,1,0,1,1,1,1,1],
+            [1,1,1,1,1,0,1,3,1,1,1,1,1,1,1,1,1,3,1,0,1,1,1,1,1],
+            [1,1,1,1,1,0,1,3,3,3,3,3,3,3,3,3,3,3,1,0,1,1,1,1,1],
+            [1,1,1,1,1,0,1,1,1,1,1,3,1,3,1,1,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,0,1],
+            [1,2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,1],
+            [1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let maze = MAZE_TEMPLATE.map(row => [...row]);
+
+        // Ghosts
+        let ghosts = [
+            { x: 12, y: 9, direction: 'up', color: '#ff0000', mode: 'chase', frightenedTime: 0 },
+            { x: 11, y: 9, direction: 'up', color: '#ffb8ff', mode: 'chase', frightenedTime: 0 },
+            { x: 13, y: 9, direction: 'up', color: '#00ffff', mode: 'chase', frightenedTime: 0 },
+            { x: 12, y: 10, direction: 'up', color: '#ea7024', mode: 'chase', frightenedTime: 0 }
+        ];
+
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Drawing functions
+        function drawSirIsaacPitman(x, y, direction = 'right') {
+            const centerX = x * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = y * CELL_SIZE + CELL_SIZE / 2;
+            const radius = CELL_SIZE * 0.8;
+
+            // Face (circle) - main head
+            ctx.fillStyle = '#fdbcb4';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Glasses frame
+            ctx.strokeStyle = '#2c2c2c';
+            ctx.lineWidth = 3;
+            const glassRadius = radius * 0.25;
+            
+            // Left lens
+            ctx.beginPath();
+            ctx.arc(centerX - radius * 0.35, centerY - radius * 0.25, glassRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Right lens
+            ctx.beginPath();
+            ctx.arc(centerX + radius * 0.35, centerY - radius * 0.25, glassRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Bridge
+            ctx.beginPath();
+            ctx.moveTo(centerX - radius * 0.1, centerY - radius * 0.25);
+            ctx.lineTo(centerX + radius * 0.1, centerY - radius * 0.25);
+            ctx.stroke();
+
+            // White hair
+            ctx.fillStyle = '#f5f5f5';
+            ctx.beginPath();
+            ctx.arc(centerX - radius * 0.75, centerY - radius * 0.4, radius * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(centerX + radius * 0.75, centerY - radius * 0.4, radius * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Beard
+            ctx.fillStyle = '#f8f8f8';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + radius * 0.6, radius * 0.9, radius * 0.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.arc(centerX - radius * 0.35, centerY - radius * 0.25, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(centerX + radius * 0.35, centerY - radius * 0.25, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawShorthandCharacter(x, y) {
+            const centerX = x * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = y * CELL_SIZE + CELL_SIZE / 2;
+            
+            ctx.strokeStyle = '#a9ca48';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX - 3, centerY);
+            ctx.quadraticCurveTo(centerX, centerY - 4, centerX + 3, centerY);
+            ctx.stroke();
+        }
+
+        function drawCertificate(x, y) {
+            const centerX = x * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = y * CELL_SIZE + CELL_SIZE / 2;
+            
+            // Certificate scroll
+            ctx.fillStyle = '#f9f9f9';
+            ctx.fillRect(centerX - 6, centerY - 4, 12, 8);
+            
+            ctx.strokeStyle = '#0d3b5d';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(centerX - 6, centerY - 4, 12, 8);
+            
+            // Ribbon
+            ctx.fillStyle = '#ea7024';
+            ctx.fillRect(centerX - 2, centerY - 6, 4, 12);
+        }
+
+        function drawGhost(ghost) {
+            const centerX = ghost.x * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = ghost.y * CELL_SIZE + CELL_SIZE / 2;
+            const radius = CELL_SIZE * 0.4;
+
+            // Ghost body
+            ctx.fillStyle = ghost.mode === 'frightened' ? '#0000ff' : ghost.color;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - radius * 0.3, radius, 0, Math.PI);
+            ctx.fillRect(centerX - radius, centerY - radius * 0.3, radius * 2, radius * 1.3);
+            
+            // Ghost bottom wavy part
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX - radius + i * (radius * 0.5), centerY + radius);
+                ctx.lineTo(centerX - radius + i * (radius * 0.5) + radius * 0.25, centerY + radius * 0.7);
+                ctx.lineTo(centerX - radius + (i + 1) * (radius * 0.5), centerY + radius);
+                ctx.fill();
+            }
+
+            // Eyes
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, radius * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, radius * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pupils
+            ctx.fillStyle = ghost.mode === 'frightened' ? 'red' : 'black';
+            ctx.beginPath();
+            ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, radius * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(centerX + radius * 0.3, centerY - radius * 0.2, radius * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Game logic
+        function isValidMove(x, y) {
+            if (x < 0) x = COLS - 1;
+            if (x >= COLS) x = 0;
+            if (y < 0 || y >= ROWS) return false;
+            return maze[y][x] !== 1;
+        }
+
+        function movePlayer(direction) {
+            let newX = player.x;
+            let newY = player.y;
+
+            switch (direction) {
+                case 'ArrowUp': newY--; break;
+                case 'ArrowDown': newY++; break;
+                case 'ArrowLeft': newX--; break;
+                case 'ArrowRight': newX++; break;
+            }
+
+            if (newX < 0) newX = COLS - 1;
+            if (newX >= COLS) newX = 0;
+
+            if (isValidMove(newX, newY)) {
+                player.x = newX;
+                player.y = newY;
+            }
+        }
+
+        function collectItem(x, y) {
+            const cellValue = maze[y][x];
+            if (cellValue === 0) {
+                maze[y][x] = 3;
+                score += 10;
+                updateUI();
+            } else if (cellValue === 2) {
+                maze[y][x] = 3;
+                score += 50;
+                powerMode = true;
+                powerModeTime = 300;
+                
+                ghosts.forEach(ghost => {
+                    ghost.mode = 'frightened';
+                    ghost.frightenedTime = 300;
+                });
+                
+                showToast("Certificate collected! Training boost activated!");
+                updateUI();
+            }
+        }
+
+        function moveGhosts() {
+            ghosts.forEach(ghost => {
+                const directions = ['up', 'down', 'left', 'right'];
+                const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
+                
+                let newX = ghost.x;
+                let newY = ghost.y;
+                
+                let targetDirection = ghost.direction;
+                
+                if (Math.random() < 0.3) {
+                    const validDirections = directions.filter(dir => {
+                        let testX = ghost.x;
+                        let testY = ghost.y;
+                        
+                        switch (dir) {
+                            case 'up': testY--; break;
+                            case 'down': testY++; break;
+                            case 'left': testX--; break;
+                            case 'right': testX++; break;
+                        }
+                        
+                        return isValidMove(testX, testY) && dir !== opposites[ghost.direction];
+                    });
+                    
+                    if (validDirections.length > 0) {
+                        targetDirection = validDirections[Math.floor(Math.random() * validDirections.length)];
+                    }
+                }
+                
+                switch (targetDirection) {
+                    case 'up': newY--; break;
+                    case 'down': newY++; break;
+                    case 'left': newX--; break;
+                    case 'right': newX++; break;
+                }
+                
+                if (isValidMove(newX, newY)) {
+                    ghost.x = newX;
+                    ghost.y = newY;
+                    ghost.direction = targetDirection;
+                }
+                
+                ghost.frightenedTime = Math.max(0, ghost.frightenedTime - 1);
+                ghost.mode = ghost.frightenedTime > 1 ? 'frightened' : 'chase';
+            });
+        }
+
+        function checkCollisions() {
+            ghosts.forEach(ghost => {
+                if (ghost.x === player.x && ghost.y === player.y) {
+                    if (ghost.mode === 'frightened') {
+                        score += 200;
+                        showToast("Competitor defeated! +200 points");
+                        updateUI();
+                    } else {
+                        lives--;
+                        if (lives <= 0) {
+                            gameState = 'gameOver';
+                            showGameOver();
+                        } else {
+                            showToast(`Training setback! ${lives} chances left.`);
+                            player = { x: 12, y: 15 };
+                            updateUI();
+                        }
+                    }
+                }
+            });
+
+            const hasDotsLeft = maze.some(row => row.some(cell => cell === 0 || cell === 2));
+            if (!hasDotsLeft) {
+                level++;
+                showToast(`Level ${level - 1} completed! Advanced training unlocked!`);
+                maze = MAZE_TEMPLATE.map(row => [...row]);
+                player = { x: 12, y: 15 };
+                updateUI();
+            }
+        }
+
+        function render() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw maze
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const cell = maze[y][x];
+                    
+                    if (cell === 1) {
+                        ctx.fillStyle = '#0d3b5d';
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    } else if (cell === 0) {
+                        drawShorthandCharacter(x, y);
+                    } else if (cell === 2) {
+                        drawCertificate(x, y);
+                    }
+                }
+            }
+
+            drawSirIsaacPitman(player.x, player.y);
+            ghosts.forEach(ghost => drawGhost(ghost));
+
+            if (powerMode) {
+                ctx.fillStyle = 'rgba(169, 202, 72, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = "❤️".repeat(lives);
+            document.getElementById('level').textContent = level;
+        }
+
+        function showToast(message) {
+            // Simple toast implementation
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #333;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function gameUpdate() {
+            if (gameState !== 'playing') return;
+
+            if (keysPressed.has('ArrowUp')) movePlayer('ArrowUp');
+            if (keysPressed.has('ArrowDown')) movePlayer('ArrowDown');
+            if (keysPressed.has('ArrowLeft')) movePlayer('ArrowLeft');
+            if (keysPressed.has('ArrowRight')) movePlayer('ArrowRight');
+
+            collectItem(player.x, player.y);
+
+            if (Math.random() < 0.3) {
+                moveGhosts();
+            }
+
+            if (powerMode) {
+                powerModeTime--;
+                if (powerModeTime <= 0) {
+                    powerMode = false;
+                }
+            }
+
+            checkCollisions();
+            render();
+        }
+
+        // Game controls
+        function startGame() {
+            gameState = 'playing';
+            document.getElementById('waitingOverlay').classList.add('hidden');
+            document.getElementById('pauseBtn').classList.remove('hidden');
+            showToast("Training quest started! Collect shorthand skills!");
+        }
+
+        function pauseGame() {
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                document.getElementById('pausedOverlay').classList.remove('hidden');
+                document.getElementById('pauseBtn').classList.add('hidden');
+                document.getElementById('resumeBtn').classList.remove('hidden');
+            }
+        }
+
+        function resumeGame() {
+            if (gameState === 'paused') {
+                gameState = 'playing';
+                document.getElementById('pausedOverlay').classList.add('hidden');
+                document.getElementById('pauseBtn').classList.remove('hidden');
+                document.getElementById('resumeBtn').classList.add('hidden');
+            }
+        }
+
+        function resetGame() {
+            gameState = 'waiting';
+            score = 0;
+            lives = 3;
+            level = 1;
+            player = { x: 12, y: 15 };
+            maze = MAZE_TEMPLATE.map(row => [...row]);
+            powerMode = false;
+            powerModeTime = 0;
+            ghosts = [
+                { x: 12, y: 9, direction: 'up', color: '#ff0000', mode: 'chase', frightenedTime: 0 },
+                { x: 11, y: 9, direction: 'up', color: '#ffb8ff', mode: 'chase', frightenedTime: 0 },
+                { x: 13, y: 9, direction: 'up', color: '#00ffff', mode: 'chase', frightenedTime: 0 },
+                { x: 12, y: 10, direction: 'up', color: '#ea7024', mode: 'chase', frightenedTime: 0 }
+            ];
+            keysPressed.clear();
+            
+            document.getElementById('waitingOverlay').classList.remove('hidden');
+            document.getElementById('pausedOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            document.getElementById('pauseBtn').classList.add('hidden');
+            document.getElementById('resumeBtn').classList.add('hidden');
+            
+            updateUI();
+            render();
+        }
+
+        function showGameOver() {
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+            document.getElementById('pauseBtn').classList.add('hidden');
+            showToast("Game Over! Time to restart your training journey.");
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+                keysPressed.add(e.key);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keysPressed.delete(e.key);
+        });
+
+        // Initialize game
+        function init() {
+            updateUI();
+            render();
+            gameLoop = setInterval(gameUpdate, 100);
+        }
+
+        // Start the game when page loads
+        window.addEventListener('load', init);
+    </script>
+
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</body>
+</html>
